@@ -1,0 +1,101 @@
+USCONFIG
+
+NAME
+	usconfig - specifies the arena's parameters before initialization
+
+SYNOPSIS
+
+	#include "arena.h"
+	ptrdiff_t usconfig(int cmd,...)
+
+DESCRIPTION
+
+	usconfig is used to set parameters for forming a shared memory
+	arena.  The usinit() function is used to initialze an arena
+	based on the parameters given to usconfig().  The command and
+	occasional second arguments are given as follows:
+
+	CONF_INITIALIZE:
+		Does nothing (returns 0)
+
+	CONF_INITSIZE,size :
+		The arena will be initialized to have (unsigned int) "size"
+		bytes available for the user to use.  The actual allocated
+		arena will be somewhat larger to accommodate internal
+		structures used by functions such as usmalloc().  It must be
+		called before usinit().
+
+		Returns the previously set value of the memory size.
+	
+	CONF_INITUSERS,maxusers
+		Usinit() will, by default, have maxusers set to 8.  With this
+		command, one may configure usinit() to have any number of
+		"users", up to one less than the system semaphore limit.
+		"users" are currently the number of semaphores that the
+		programmer wishes to have.  The actual number of semaphores
+		that usinit() will set up is one more than maxusers (for the
+		benefit of the memory allocation routines: usmalloc, etc).
+
+		Returns the previously set value of the number of users.
+
+	CONF_GETSIZE
+		Returns the amount of shared memory that usinit() will set up.
+
+	CONF_GETUSERS
+		Returns the number of users (semaphores) that usinit() will set
+		up.  Actually usinit() sets up one hidden semaphore for the
+		internal use of the memory allocation routines (usmalloc,
+		uscalloc, usfree, usrealloc, usrecalloc).
+
+	CONF_LOCKTYPE
+		Not supported (currently this library is set up for a single
+		processor, hence there are no spinlocks).
+	
+	CONF_ARENATYPE
+		Not supported, returns -1.
+	
+	CONF_CHMOD,permission
+
+		The system chmod command's octal read/write/execute permissions
+		are used here to specify the permissions to be associated with
+		the semaphores.  By default, the permission 0600 is used (read
+		and write permission for the owner only).
+		
+		Returns the previously set value of permission.
+
+	CONF_ATTACHADDR:
+
+		The shared memory arena is attached to this virtual address in
+		the calling process's space.  The default value is 0, so the
+		system will then select an address to attach it to.  Letting
+		the system do the selection usually means that other unrelated
+		processes which attempt to usadd() themselves to the shared
+		memory arena will fail in the attempt.  Often, one good value
+		for Linux boxes is 0x40000000.  The arena stores the attach
+		address that the first usinit() used, so subsequent usadd()s
+		will always attempt to attach to the same virtual address.
+		
+		Returns the previously set value of the virtual attach address.
+
+	CONF_AUTOGROW  CONF_HISTOFF    CONF_HISTRESET            
+	CONF_AUTORESV  CONF_HISTSIZE   CONF_STHREADIOOFF         
+	CONF_HISTON    CONF_HISTFETCH  CONF_STHREADIOON          
+		None of these are supported.  Returns -1.
+
+SEE ALSO
+
+	usinit usadd usnewlock
+
+DIAGNOSTICS
+
+	Returns a -1: error
+	Returns a  0: the command didn't set any particular output
+	Returns a  +: see the individual command for its meaning
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

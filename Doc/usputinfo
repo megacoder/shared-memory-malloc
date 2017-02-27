@@ -1,0 +1,49 @@
+USPUTINFO
+
+NAME
+	usputinfo - puts an information pointer into the shared arena
+
+SYNOPSIS
+	#include "arena.h"
+	int usputinfo(usptr_t *usarena,void *info)
+
+DESCRIPTION
+
+	This function assumes that the "info" pointer refers to information
+	contained inside the shared arena.  It puts the information pointer
+	into the USArena structure.
+
+	There are three main structures defined by "arena.h":
+
+		USFreeBin
+			This structure holds the head and tail of a list of
+			free memory chunks.
+
+		USArena
+			This local to the process data structure holds all of
+			the arena parameters; a portion of it
+			(the USArenaShare) is either copied from (or copied to
+			if its the initial allocation) the shared memory to
+			coordinate with other processes.
+			
+		USArenaShare
+			This data structure is copied to the beginning of the
+			shared memory.  It holds such things as the attach
+			point, the IPC key associated with the shared memory,
+			and the "info" offset.
+	
+	So, one may use usputinfo() to place a copy of the info pointer into
+	shared memory.  Other processes will get that "info" pointer when
+	they use usinit() or usadd().
+
+SEE ALSO
+
+	usgetinfo uscasinfo usinit usadd
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

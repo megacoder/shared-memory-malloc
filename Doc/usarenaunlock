@@ -1,0 +1,25 @@
+USARENAUNLOCK
+
+NAME
+	usarenaunlock - unlocks the usarena semaphore
+
+SYNOPSIS
+	#include "arena.h"
+	int usarenaunlock(usptr_t *usarena)
+
+DESCRIPTION
+
+	This call unlocks the entire-arena semaphore; it will not block
+	if if the semaphore already is zero.
+
+SEE ALSO
+
+	usarenalockinit usarenalock
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

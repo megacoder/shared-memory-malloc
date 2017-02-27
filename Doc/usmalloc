@@ -1,0 +1,142 @@
+USMALLOC
+
+NAME
+	usmalloc - allocator for shared memory
+
+SYNOPSIS
+	#include "arena.h"
+	void *usmalloc(size_t size,usptr_t *arena)
+	void *uscalloc(size_t nelem, size_t elsize, usptr_t *arena)
+	void  usfree(void *ptr,usptr_t *arena)
+	void *usrealloc(void *ptr,size_t size,usptr_t *arena)
+	void *usrecalloc(void *ptr,size_t nel,size_t elsize,usptr_t *arena)
+
+DESCRIPTION
+
+	The usmalloc() function emulates malloc() but draws its memory from the
+	arena's shared memory pool.  Consequently, multiple processes can share
+	the same memory.  It takes the malloc size argument (size of memory to
+	be allocated) and a pointer to the shared memory arena, returning a
+	pointer to "size" bytes of shared memory.  The memory is not cleared.
+
+	The uscalloc() function emulates calloc(); again, it draws its memory
+	from the arena's shared memory pool.  It allocates memory for an array
+	of nelem elements of size elsize bytes each, returning a pointer to
+	memory it allocates from the shared memory pool.  The memory is set to
+	zero.
+
+	The usfree() function returns memory to the shared memory pool.
+
+	usrealloc() changes the size of the arena's shared memory block pointed
+	to by ptr to size bytes.  A copy of as many bytes as possible from the
+	old memory is made with the new memory.
+
+	The usrecalloc() function changes the size of the arena's shared memory
+	block pointed to by ptr to nel*elsize bytes, copying as many bytes as
+	possible from the old memory to the new memory.  Newly available bytes
+	are zero'd, assuming that the new size is greater than the old size.
+
+	The usconfig() function is used to initialize the options for the
+	shared memory arena.  I advise using the CONF_ATTACHADDR option with
+	0x40000000 or 0x50000000; if the internal mapping call is successful
+	(done by usinit()), then the pointers resulting from usmalloc will be
+	working from the same attachment point (hence pointers can be set in
+	one process and be properly meaningful to another process).
+
+	The usinit() function is then used to initialize the arena's shared
+	memory pool.
+
+	The shared memory pool initially is broken up into two sections: the
+	USArenaShare section and the memory available for the programmer via
+	usmalloc(), uscalloc(), and usrealloc().
+
+		            Shared Memory Pool
+		    usarena->mempool ->   USArenaShare
+		    usarena->base    ->   memory available via usmalloc/uscalloc
+	
+	The memory handed out via usmalloc() is taken as an offset from the
+	usarena->base.  The allocatable memory in the pool comes in two types:
+	allocated chunks and free chunks.
+
+		  Allocated Chunk Format          Free Chunk Format
+		    size:status=inuse          size:status=free
+		    ..user data space..        ptr to next chunk in bin
+		    size:status                ptr to prev chunk in bin
+			                           ..unused space..
+					       size:status
+
+	Since user size requests are always rounded up to the nearest 16 bytes,
+	sizes have three unused low-end bits.  The lowest bit is used to indicate
+	whether the chunk status is free or inuse.  The sizes as stored in the
+	chunks *include* the overhead bytes.  At least 8 bytes will always be
+	available for the smallest inuse chunk (as its overhead is only 2*4=8
+	bytes as compared to the minimum free chunk size of 16 bytes).
+
+	The USArenaShare structure, placed at the beginning of the shared memory
+	pool, contains a USMAXFREEBIN (currently, 156) array of USFreeBin structures.
+	Each such bin holds the head and tail of a linked list of similarly sized
+	chunks.
+
+	When a chunk of shared memory is free'd, it is placed onto the appropriate
+	available (free) memory bin linked list (see USArenaShare).  For example,
+	bin#0 holds 8-byte chunks, bin#1 holds 16-byte chunks, etc.  Bins #0-63
+	hold a single chunk size which is some multiple of 8.  Bins#64-155 hold
+	ever increasing ranges of chunk sizes (ex. bin#155 holds chunks sized from
+	3758096384 to 4294967288 bytes).
+
+	When memory is allocated, a search for an available free chunk is made from
+	the appropriate bin.  The free chunk selected may be split and the free'd
+	portion returned to the appropriate free-memory bin; the other portion will
+	be given to the programmer to use for his/her memory allocation.  Pseudo-code
+	follows:
+
+	    GetChunk()
+	      Hash size request to appropriate linked-list bin
+	      Search for matching size chunk in bin
+	       * start search from head or tail, whichever's closest
+	       * maintain size sorting on linked list
+	      Pick chunk closest free-chunk to request size match
+	      Split chunk
+	       * put free chunk back (if any)
+	       * transform other chunk into user chunk
+
+	When usfree() is used, that memory is released by linking it to the
+	appropriate free shared memory bin.  If either of the neighboring
+	chunks of the newly free'd memory is also free, then the chunks are
+	merged into a larger chunk and placed onto the appropriate bin's
+	linked list.  Pseudo-code for this follows:
+
+            ReleaseChunk()
+              Check predecessor/successor chunks, if any, for status=free
+              * merge contiguous free chunk
+              * recompute appropriate bin for enlarged free chunk
+              * remove enlarged free chunk from current bin if necessary
+              * place into newly proper bin
+              If no neighboring free chunks
+              * transform into free chunk
+              * place into appropriate bin
+
+	A segfault can result if the shared memory has been corrupted (which is
+	indicated by mismatching sizes at the beginning and ending of a chunk).
+
+	If there's insufficient free shared memory to support the requested
+	allocation then usmalloc() will return a NULL pointer.  More precisely:
+	if there's no free chunk of memory available to support the requested
+	allocation then the NULL pointer will be returned.  It is possible that
+	the shared memory has become too badly fragmented and although it may
+	have enough free shared memory to support the request, it isn't
+	contiguous.
+
+
+SEE ALSO
+
+	uscalloc usfree usrealloc usfree USArenaShare
+	http://gee.cs.oswego.edu/dl/html/malloc.html
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

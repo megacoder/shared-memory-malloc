@@ -1,0 +1,21 @@
+USADD
+
+NAME
+	usadd - allows processes to "add" themselves as users of an usarena
+
+SYNOPSIS
+	#include "arena.h"
+	int usadd(usptr_t *usarena)
+
+DESCRIPTION
+
+	The usadd() function is called by a process to open an usarena and attach
+	itself to shared memory.
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

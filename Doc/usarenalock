@@ -1,0 +1,25 @@
+USARENALOCK
+
+NAME
+	usarenalock - locks the usarena semaphore
+
+SYNOPSIS
+	#include "arena.h"
+	int usarenalock(usptr_t *usarena)
+
+DESCRIPTION
+
+	This call locks the entire-arena semaphore, and is a potentially
+	blocking call.
+
+SEE ALSO
+
+	usarenalockinit usarenaunlock
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

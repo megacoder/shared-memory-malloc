@@ -1,0 +1,8 @@
+Usage:  example filename
+
+This example will bring up an arena using the memory mapped file specified by
+filename; it will then sleep for ten seconds.  One may bring up other copies of
+the example program during that time interval.  Eventually they wake up and
+clean up.  The last one removes the shared memory resources.
+
+I suggest running example in different terminal windows.

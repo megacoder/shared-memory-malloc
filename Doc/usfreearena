@@ -1,0 +1,25 @@
+USFREEARENA
+
+NAME
+	usfreearena - frees resources associated with an arena
+
+SYNOPSIS
+	#include "arena.h"
+	void usfreearena(usptr_t *usarena)
+
+DESCRIPTION
+
+	This function frees the memory associated with an arena, unmaps
+	it, and releases all associated semaphores.
+
+SEE ALSO
+	usadd usconfig usinit
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man
+

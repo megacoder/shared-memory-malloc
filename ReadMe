@@ -1,0 +1,14 @@
+ReadMe
+Author: Charles E. Campbell, Jr.
+Copyright: (c) 2008 by Charles E. Campbell, Jr.
+           -- see Doc/uscopyright -- (includes license)
+
+This package contains source code for a shared memory, memory allocator.
+Multiple processes can now use usmalloc, uscalloc, usrealloc, and usfree
+(and more) to allocate and free memory from a shared memory pool.
+
+1. This package is intended for Linux-based operating systems.
+
+2. To build:  make
+   The result should be two header files, a library file (usarena.a), and
+   an example program (called: "example").

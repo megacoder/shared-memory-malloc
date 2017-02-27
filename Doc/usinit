@@ -1,0 +1,85 @@
+USINIT
+
+NAME
+	usinit - initializes a shared memory based "arena"
+
+C SYNOPSIS
+
+	usptr_t *usinit(const char *filename)
+
+DESCRIPTION
+
+	The usinit() function allocates and initializes a shared memory usarena
+	from which related or unrelated processes may share and allocate memory and
+	semaphores.  Use usconfig() to select various options, including the size
+	of the shared memory pool and the number of semaphores (users).
+
+	A usarena is a pointer to a USArena:
+
+		struct USArena_str {             USArena: (usptr_t)
+    		char           *filename;    name of shared memory file
+    		unsigned long   permission;  access permissions for shared mem file
+    		usbase         *mempool;     shared memory starts here
+    		int             semid;       semaphore identifier
+    		usbase         *base;        ptr to beginning of allocation-memory
+    		void           *memattach;   optional where-to-attach mempool
+    		key_t           key;         (USArenaShare) IPC key
+    		size_t          memsize;     (USArenaShare) total size of shared memory
+    		unsigned long   maxusers;    (USArenaShare) controls qty semaphores
+    		usoffset        info;        (USArenaShare) usinfo storage
+    		USFreeBin      *bin;         (USArenaShare) free chunk bins
+    		};
+
+	Typical use:
+	* call usconfig() as many times as necessary to set up desired options
+	* generate a filename for the shared memory pool (which uses mmap)
+	* call usinit() to generate a mmap'd shared memory pool (which will
+	  hold the usarena), semaphores; usinit() returns a pointer which
+	  will be hereafter referred to as "usarena".
+	* call usgetinfo(usarena)
+	  - if non-null pointer: one now has a pointer to a pre-existing
+		arena of information.  An arena is generally a structure full
+		of head/tail pointers and other to-be-shared information.
+	  - if null pointer:
+		+ use uscalloc() to allocate an "arena" structure which will be shared
+		  Note that this arena is programmer defined and sized, and can hold
+		  whatever.
+		+ allocate a lock for the new arena using usnewlock()
+		+ set the lock using uscsetlock()
+		+ use uscasinfo() to install the newly allocated arena
+		+ unset the lock using usunsetlock()
+
+	So, when a process joins an arena, it ends up with:
+	  usarena : a usptr_t pointer (a USArena_str *)
+	  a pointer to an arena: generally, this is expected to be a structure
+	  defined by the programmer, and typically holds things such as head/tail
+	  pointers, tables, etc.
+
+
+SEE ALSO
+	usconfig usadd
+
+DIAGNOSTICS
+	Returns a pointer to the shared memory usarena
+	-or-    returns a NULL pointer (signifying failure).
+	        Possibilities:
+			  filename is null
+			  unable to allocate memroy for the filename
+			  permission error when attempting to open the usarena for read+write
+			  unable to set an advisory lock on the file
+			  unable to seed to end-of-file
+			  failed when writing a byte to the end-of-file
+			  mmap failed in trying to attach usarena->mempool
+			  ftok failed to generate an IPC key for semaphores
+			  semget() failed to generate requested qty of semaphores
+			  unable to allocate initialization array for semaphores
+			  semctl() failed to initialize semaphores
+			  usadd() failed when attempting to join a pre-existing usarena
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man

@@ -1,0 +1,61 @@
+USLOCKS
+
+NAME
+	uslocks -- support for semaphore locking with shared memory access
+
+SYNOPSIS
+	#include <arena.h>
+	#include <ulocks.h>
+	usnewlock(usptr_t *usarena)
+	usfreelock(ulock_t lock, usptr_t *usarena)
+	ussetlock(ulock_t lock)
+	uscsetlock(ulock_t lock,unsigned spins)
+	uswsetlock(ulock_t lock,unsigned spins)
+	int ustestlock(ulock_t lock)
+	int usunsetlock(ulock_t lock)
+
+DESCRIPTION
+
+	At initialization time, the usconfig(CONF_INITUSERS,maxusers) command
+	is used to specify the number of "users" that the arena will support.
+	Actually this command specifies the quantity of semaphores in the
+	semaphore set associated with the arena.  One may manipulate these
+	semaphores with the following functions:
+
+	usnewlock  : allocates a lock from the usarena and initializes it to zero.
+	             Locks are semaphore based.  Returns a pointer to a ulock_t
+		     structure.
+                   
+	usfreelock : this function frees all memory associated with the specified
+	             lock.  Problems may occur if the lock is not a valid lock;
+		     null locks are ignored.  The semaphore set associated with
+		     the usarena is not released via this function.
+                   
+	ussetlock  : this function does a test&set of a semaphore lock.  The
+	             semop() call it uses is atomic.  This call will block until
+		     the semaphore is zero.  Returns -1 on failure (input lock
+		     pointer is null, lock's semaphore id is negative, more locks
+		     requested than the arena supports).  Otherwise, it returns 0.
+                   
+	uscsetlock : this function does a test&set of a semaphore lock.  If
+	             "spins" is greater than zero, then it will determine if the
+		     associated semaphore may be zero'd without blocking.
+		     Otherwise the function will block and do a test&set of the
+		     associated semaphore.
+                   
+	uswsetlock : currently, this function is the same as ussetlock().
+                   
+	ustestlock : returns the current value of the semaphore.  Will return
+	             -1 on failure or a number greater than or equal to zero
+		     otherwise.
+
+	usunsetlock: this function releases the lock (ie. sets it to zero),
+	             and will not block.  Returns -1 on failure, 0 else.
+
+AUTHOR
+	Charles E. Campbell,Jr.
+	Oct 15, 2008
+	Copyright 2008
+	-- see uscopyright --
+
+vim: ft=man
